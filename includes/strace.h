@@ -24,6 +24,8 @@
 # include <sys/wait.h>
 # include <sys/ptrace.h>
 
+#define MAX_SYSCALL_NR 400
+
 typedef struct s_options
 {
 	bool	calls;
@@ -37,5 +39,9 @@ t_options	parse_argv(int argc, char **argv);
 // UTILS
 
 void		ft_exit_message(char *message, ...);
+
+// SYSCALLS
+
+const char	*syscall_name(long scno);
 
 #endif

@@ -31,6 +31,8 @@ void strace(char **argv_exec, t_options options)
 
 	status = 0;
 	waitpid(pid, &status, 0);
+	ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
+
 	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 	
 	printf("Parent process %d is now tracing child process %d.\n", getpid(), pid);
@@ -38,12 +40,23 @@ void strace(char **argv_exec, t_options options)
 	i = 0;
 	while (1)
 	{
-		waitpid(pid, &status, __WALL);
+		waitpid(-1, &status, __WALL);
+
 		if (WIFEXITED(status) || WIFSIGNALED(status))
 			break;
 
-		if (WIFSTOPPED(status) && WSTOPSIG(status) != SIGTRAP)
+		int sig = WSTOPSIG(status);
+
+		if (sig == SIGTRAP)
+		{
+			ptrace(PTRACE_SYSCALL, pid, 0, 0);
 			continue;
+		}
+		if ((sig & 0x80) == 0)
+		{
+			ptrace(PTRACE_SYSCALL, pid, 0, sig);
+			continue;
+		}
 
 		struct user_regs_struct regs;
 		ptrace(PTRACE_GETREGS, pid, NULL, &regs);
@@ -51,14 +64,14 @@ void strace(char **argv_exec, t_options options)
 		if (i % 2 == 0)
 		{
 			long scno = regs.orig_rax;
-
-			printf(">> Entering syscall #%ld ()\n", scno);
+			printf("%s() = ", syscall_name(scno));
+			// printf(">> Entering syscall #%ld ()\n", scno);
 		}
 		else
 		{
 			long ret = regs.rax;
 
-			printf("<< Exiting syscall with return value: %ld\n", ret);
+			printf("%ld\n", ret);
 		}
 
 
@@ -98,4 +111,6 @@ int main(int argc, char **argv)
 	printf("\n\n");
 
 	strace(argv_exec, options);
+
+	printf("Strace finished.\n");
 }

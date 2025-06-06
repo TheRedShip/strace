@@ -44,6 +44,7 @@ OBJS_DIR	:=	.objs
 ALL_SRCS	:=	main.c				\
 				utils.c				\
 				parsing.c			\
+				syscall.c			\
 
 
 SRCS		:=	$(ALL_SRCS:%=$(SRCS_DIR)/%)
@@ -98,18 +99,13 @@ dclean: clean
 fclean: dclean
 	@printf " $(BWHITE)$(NAME):$(BRED) cleaned.$(RESET)\n"
 	@$(RM) $(NAME)
-	@$(MAKE) -C $(LFT_DIR) fclean
-
-mfclean: dclean
-	@$(RM) $(NAME)
-
-mre:
-	@$(MAKE) mfclean
-	@$(MAKE) all
 
 re:
 	@$(MAKE) fclean
 	@$(MAKE) all
+
+test:
+	@${CC} -o test test.c
 
 # **************************************************************************** #
 
