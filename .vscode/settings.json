@@ -1,6 +1,7 @@
 {
 	"files.associations": {
 		"*.cs": "csharp",
-		"strace.h": "c"
+		"strace.h": "c",
+		"stdbool.h": "c"
 	}
 }

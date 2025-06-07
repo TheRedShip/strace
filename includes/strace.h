@@ -32,16 +32,32 @@ typedef struct s_options
 }	t_options;
 
 
+typedef enum	s_arg_type
+{
+    INT,
+    STR,
+    PTR,
+    STRUCT,
+}	t_arg_type;
+
+typedef struct	s_syscall_info
+{
+	char	*name;
+	short	argc;
+    t_arg_type	arg_types[6];
+}	t_syscall_info;
+
+
 // PARSING
 
-t_options	parse_argv(int argc, char **argv);
+t_options				parse_argv(int argc, char **argv);
 
 // UTILS
 
-void		ft_exit_message(char *message, ...);
+void					ft_exit_message(char *message, ...);
 
 // SYSCALLS
 
-const char	*syscall_name(long scno);
+t_syscall_info	syscall_name(long scno);
 
 #endif

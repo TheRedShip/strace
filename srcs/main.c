@@ -64,15 +64,17 @@ void strace(char **argv_exec, t_options options)
 		if (i % 2 == 0)
 		{
 			long scno = regs.orig_rax;
-			printf("%s() = ", syscall_name(scno));
-			// printf(">> Entering syscall #%ld ()\n", scno);
+			t_syscall_info syscall_info = syscall_name(scno);
+			printf("%s(", syscall_info.name);
+			for (int j = 0; j < syscall_info.argc; j++)
+			{
+				if (j > 0) printf(", ");
+				printf("%d", j);
+			}
+			printf(") ");
 		}
 		else
-		{
-			long ret = regs.rax;
-
-			printf("%ld\n", ret);
-		}
+			printf("= %llu\n", regs.rax);
 
 
 		ptrace(PTRACE_SYSCALL, pid, 0, 0);
