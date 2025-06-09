@@ -12,22 +12,11 @@
 
 #include "strace.h"
 
-void strace(char **argv_exec, t_options options)
+void	trace(pid_t pid, t_options options)
 {
-	(void)	options;
+	(void) 	options;
 	int		i;
-	pid_t	pid;
 	int		status;
-
-	pid = fork();
-	if (pid == 0)
-	{
-		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
-		kill(getpid(), SIGSTOP);
-		execvp(argv_exec[0], argv_exec);
-
-		ft_exit_message("Failed to execute command: %s", argv_exec[0]);
-	}
 
 	status = 0;
 	waitpid(pid, &status, 0);
@@ -43,45 +32,47 @@ void strace(char **argv_exec, t_options options)
 		waitpid(-1, &status, __WALL);
 
 		if (WIFEXITED(status) || WIFSIGNALED(status))
-			break;
+			break ;
 
 		int sig = WSTOPSIG(status);
 
 		if (sig == SIGTRAP)
 		{
 			ptrace(PTRACE_SYSCALL, pid, 0, 0);
-			continue;
+			continue ;
 		}
 		if ((sig & 0x80) == 0)
 		{
 			ptrace(PTRACE_SYSCALL, pid, 0, sig);
-			continue;
+			continue ;
 		}
 
-		struct user_regs_struct regs;
-		ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-
-		if (i % 2 == 0)
-		{
-			long scno = regs.orig_rax;
-			t_syscall_info syscall_info = syscall_name(scno);
-			printf("%s(", syscall_info.name);
-			for (int j = 0; j < syscall_info.argc; j++)
-			{
-				if (j > 0) printf(", ");
-				printf("%d", j);
-			}
-			printf(") ");
-		}
-		else
-			printf("= %llu\n", regs.rax);
-
+		print_single_syscall(pid, (bool)(i % 2) == false);
 
 		ptrace(PTRACE_SYSCALL, pid, 0, 0);
 		
 		++i;
 	}
+}
 
+void	strace(char **argv_exec, t_options options)
+{
+	pid_t	pid;
+
+	pid = fork();
+	if (pid < 0)
+		ft_exit_message("Failed to fork process");
+
+	if (pid == 0)
+	{
+		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+		kill(getpid(), SIGSTOP);
+		execvp(argv_exec[0], argv_exec);
+
+		ft_exit_message("Failed to execute command: %s", argv_exec[0]);
+	}
+
+	trace(pid, options);
 }
 
 int main(int argc, char **argv)

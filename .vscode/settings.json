@@ -2,6 +2,7 @@
 	"files.associations": {
 		"*.cs": "csharp",
 		"strace.h": "c",
-		"stdbool.h": "c"
+		"stdbool.h": "c",
+		"stdarg.h": "c"
 	}
 }

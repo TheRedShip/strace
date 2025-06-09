@@ -45,6 +45,7 @@ ALL_SRCS	:=	main.c				\
 				utils.c				\
 				parsing.c			\
 				syscall.c			\
+				print.c				\
 
 
 SRCS		:=	$(ALL_SRCS:%=$(SRCS_DIR)/%)
@@ -56,7 +57,7 @@ HEADERS		:=	includes/strace.h
 
 CC          :=	clang
 
-CFLAGS      :=	-Wall -Wextra -Werror
+CFLAGS      :=	-Wall -Wextra -Werror -g
 
 IFLAGS	    :=	-I ./includes
 

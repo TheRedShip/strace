@@ -23,8 +23,12 @@
 # include <sys/user.h>
 # include <sys/wait.h>
 # include <sys/ptrace.h>
+# include <errno.h>
+# include <fcntl.h>
+# include <sys/uio.h>
+# include <linux/elf.h>
 
-#define MAX_SYSCALL_NR 400
+#define MAX_SYSCALL_NR 467
 
 typedef struct s_options
 {
@@ -35,6 +39,7 @@ typedef struct s_options
 typedef enum	s_arg_type
 {
     INT,
+    UINT,
     STR,
     PTR,
     STRUCT,
@@ -58,6 +63,10 @@ void					ft_exit_message(char *message, ...);
 
 // SYSCALLS
 
-t_syscall_info	syscall_name(long scno);
+t_syscall_info          get_syscall_info(long scno);
+
+// PRINT
+
+void					print_single_syscall(pid_t pid, bool is_enter);
 
 #endif

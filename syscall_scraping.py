@@ -5,7 +5,9 @@ import re
 # category mapping helper
 def categorize(typename):
     t = typename.strip()
-    if re.match(r'^(int|long|unsigned|size_t|pid_t|ssize_t)', t): return "INT"
+    if any([True for test in ["addr","start","end"] if test in t]): return "PTR"
+    if re.match(r'^(unsigned|size_t|pid_t)', t): return "UINT"
+    if re.match(r'^(int|long|ssize_t)', t): return "INT"
     if '*' in t and re.match(r'.*(char|const char).*\*', t): return "STR"
     if re.match(r'.*\*', t): return "PTR"
     if re.match(r'struct ', t): return "STRUCT"

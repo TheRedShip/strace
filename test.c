@@ -12,6 +12,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <fcntl.h>
 
 int main(int argc, char **argv)
 {
@@ -21,5 +22,6 @@ int main(int argc, char **argv)
 	write(1, "Hello, World!\n", 14);
 	getpid();
 
+	open("test.txt", -1);
 	return (0);
 }
