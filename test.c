@@ -19,9 +19,9 @@ int main(int argc, char **argv)
 	getpid();
 	getpid();
 	getpid();
+	pause();
 	write(1, "Hello, World!\n", 14);
 	getpid();
 
-	open("test.txt", -1);
 	return (0);
 }

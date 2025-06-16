@@ -35,14 +35,47 @@ ssize_t read_string_procfs(pid_t child, unsigned long addr, char *buf, size_t bu
 	return (nread);
 }
 
-void	print_syscall_args(pid_t pid, struct user_regs_struct regs)
+void	print_arg_type(t_arg_type arg_type, pid_t pid, long long addr)
 {
-	long			scno;
-	t_syscall_info	syscall_info;
-	long long		regs_values[6] = {regs.rdi, regs.rsi, regs.rdx, regs.r10, regs.r8, regs.r9};
+	char str_buf[256];
 
-	scno = regs.orig_rax;
-	syscall_info = get_syscall_info(scno);
+	switch (arg_type)
+	{
+		case INT:
+			printf("%lld", addr);
+			break;
+		case UINT:
+			printf("%llu", addr);
+			break;
+		case STR:
+			if (addr == 0)
+				printf("NULL");
+			else
+			{
+				if (read_string_procfs(pid, addr, str_buf, sizeof(str_buf)) < 0)
+					perror("read_string_procfs");
+				else
+					printf("\"%s\"", str_buf);
+			}
+			break;
+		case PTR:
+			if (addr == 0)
+				printf("NULL");
+			else
+				printf("%p", (void *)addr);
+			break;
+		case STRUCT:
+			printf("{STRUCT at %p}", (void *)addr);
+			break;
+		default:
+			printf("unknown");
+			break;
+	}
+}
+
+void	print_syscall_args(t_syscall_info syscall_info, pid_t pid, struct user_regs_struct regs)
+{
+	long long		regs_values[6] = {regs.rdi, regs.rsi, regs.rdx, regs.r10, regs.r8, regs.r9};
 
 	printf("%s(", syscall_info.name);
 
@@ -51,43 +84,7 @@ void	print_syscall_args(pid_t pid, struct user_regs_struct regs)
 		if (i > 0)
 			printf(", ");
 		
-		switch (syscall_info.arg_types[i])
-		{
-			case INT:
-				printf("%lld", regs_values[i]);
-				break;
-			case UINT:
-
-				printf("%llu", regs_values[i]);
-				break;
-			case STR:
-				if (regs_values[i] == 0)
-					printf("NULL");
-				else
-				{
-					char str_buf[256];
-					if (read_string_procfs(pid, regs_values[i], str_buf, sizeof(str_buf)) < 0)
-					{
-						perror("read_string_procfs");
-						printf("ERROR");
-					}
-					else
-						printf("\"%s\"", str_buf);
-				}
-				break;
-			case PTR:
-				if (regs_values[i] == 0)
-					printf("NULL");
-				else
-					printf("%p", (void *)regs_values[i]);
-				break;
-			case STRUCT:
-				printf("{STRUCT at %p}", (void *)regs_values[i]);
-				break;
-			default:
-				printf("unknown");
-				break;
-		}
+		print_arg_type(syscall_info.arg_types[i], pid, regs_values[i]);
 	}
 
 	printf(") ");
@@ -95,8 +92,9 @@ void	print_syscall_args(pid_t pid, struct user_regs_struct regs)
 
 void	print_single_syscall(pid_t pid, bool is_enter)
 {
+	t_syscall_info			syscall_info;
 	struct user_regs_struct regs;
-	struct iovec iov = {
+	struct iovec			iov = {
 		.iov_base = &regs,
 		.iov_len  = sizeof(regs),
 	};
@@ -107,8 +105,14 @@ void	print_single_syscall(pid_t pid, bool is_enter)
 		ft_exit_message("Failed to get registers for PID %d", pid);
 	}
 
+	syscall_info = get_syscall_info(regs.orig_rax);
+
 	if (is_enter)
-		print_syscall_args(pid, regs);
+		print_syscall_args(syscall_info, pid, regs);
 	else
-		printf("= %llu\n", regs.rax);
+	{
+		printf("= ");
+		print_arg_type(syscall_info.ret_type, pid, regs.rax);
+		printf("\n");
+	}
 }

@@ -15,13 +15,27 @@
 void	trace(pid_t pid, t_options options)
 {
 	(void) 	options;
-	int		i;
-	int		status;
+	int			i;
+	int			status;
+	sigset_t	empty;
+	sigset_t	blocked;
 
 	status = 0;
-	waitpid(pid, &status, 0);
-	ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
 
+	sigemptyset(&empty);
+    sigemptyset(&blocked);
+
+	sigaddset(&blocked, SIGHUP);
+    sigaddset(&blocked, SIGINT);
+    sigaddset(&blocked, SIGQUIT);
+    sigaddset(&blocked, SIGPIPE);
+    sigaddset(&blocked, SIGTERM);
+
+	sigprocmask(SIG_SETMASK, &empty, NULL);
+	waitpid(pid, &status, 0);
+	sigprocmask(SIG_BLOCK, &blocked, NULL);
+
+	ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
 	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 	
 	printf("Parent process %d is now tracing child process %d.\n", getpid(), pid);
@@ -29,7 +43,9 @@ void	trace(pid_t pid, t_options options)
 	i = 0;
 	while (1)
 	{
+		sigprocmask(SIG_SETMASK, &empty, NULL);
 		waitpid(-1, &status, __WALL);
+		sigprocmask(SIG_BLOCK, &blocked, NULL);
 
 		if (WIFEXITED(status) || WIFSIGNALED(status))
 			break ;
@@ -46,7 +62,6 @@ void	trace(pid_t pid, t_options options)
 			ptrace(PTRACE_SYSCALL, pid, 0, sig);
 			continue ;
 		}
-
 		print_single_syscall(pid, (bool)(i % 2) == false);
 
 		ptrace(PTRACE_SYSCALL, pid, 0, 0);

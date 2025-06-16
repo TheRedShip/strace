@@ -50,6 +50,7 @@ typedef struct	s_syscall_info
 	char	*name;
 	short	argc;
     t_arg_type	arg_types[6];
+    t_arg_type	ret_type;
 }	t_syscall_info;
 
 
