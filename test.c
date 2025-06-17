@@ -19,9 +19,9 @@ int main(int argc, char **argv)
 	getpid();
 	getpid();
 	getpid();
-	pause();
+	// pause();
 	write(1, "Hello, World!\n", 14);
 	getpid();
 
-	return (0);
+	return (-1);
 }

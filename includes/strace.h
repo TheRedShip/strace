@@ -30,6 +30,8 @@
 
 #define MAX_SYSCALL_NR 467
 
+extern pid_t	g_traced_pid;
+
 typedef struct s_options
 {
 	bool	calls;
@@ -69,5 +71,9 @@ t_syscall_info          get_syscall_info(long scno);
 // PRINT
 
 void					print_single_syscall(pid_t pid, bool is_enter);
+
+// SIGNALS
+
+void                    ft_setup_signal(void);
 
 #endif

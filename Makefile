@@ -46,6 +46,7 @@ ALL_SRCS	:=	main.c				\
 				parsing.c			\
 				syscall.c			\
 				print.c				\
+				signal.c			\
 
 
 SRCS		:=	$(ALL_SRCS:%=$(SRCS_DIR)/%)

@@ -12,7 +12,9 @@
 
 #include "strace.h"
 
-void	trace(pid_t pid, t_options options)
+pid_t	g_traced_pid = 0;
+
+int	trace(pid_t pid, t_options options)
 {
 	(void) 	options;
 	int			i;
@@ -68,9 +70,10 @@ void	trace(pid_t pid, t_options options)
 		
 		++i;
 	}
+	return (status);
 }
 
-void	strace(char **argv_exec, t_options options)
+int	strace(char **argv_exec, t_options options)
 {
 	pid_t	pid;
 
@@ -87,7 +90,9 @@ void	strace(char **argv_exec, t_options options)
 		ft_exit_message("Failed to execute command: %s", argv_exec[0]);
 	}
 
-	trace(pid, options);
+	g_traced_pid = pid;
+
+	return (trace(pid, options));
 }
 
 int main(int argc, char **argv)
@@ -95,6 +100,8 @@ int main(int argc, char **argv)
 	t_options	options;
 	char		**argv_exec;
 	int			i;
+
+	ft_setup_signal();
 
 	options = parse_argv(argc, argv);
 
@@ -108,17 +115,19 @@ int main(int argc, char **argv)
 
 	argv_exec = argv + i;
 
-	printf("Executing strace with options:\n");
-	if (options.calls)
-		printf(" - Calls tracing enabled\n");
-	else
-		printf(" - Calls tracing disabled\n");
-	printf(" - Executing command: ");
-	for (int i = 0; argv_exec[i] != NULL; i++)
-		printf("%s ", argv_exec[i]);
-	printf("\n\n");
+	int exit_status = strace(argv_exec, options);
 
-	strace(argv_exec, options);
-
-	printf("Strace finished.\n");
+	if (WIFEXITED(exit_status))
+	{
+		int exit_code = WEXITSTATUS(exit_status);
+		printf("\n+++ exited with %d +++\n", exit_code);
+		return (exit_code);
+	}
+	else if (WIFSIGNALED(exit_status))
+	{
+		int signal = WTERMSIG(exit_status);
+		printf("\n+++ killed by signal %d +++\n", signal);
+		return (128 + signal);
+	}
+	return (0);
 }
